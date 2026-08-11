@@ -2,49 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design tokens — professional neutral slate base + Swiss-red primary.
-   Semantic risk colors are chosen to stay distinguishable in both themes. */
+/* Galenica brand palette
+   Primary  #312880 (indigo)   Accent #e74b11 (orange)
+   Neutrals #edece8 (cream)     Link   #0047ba
+   Success  #3d9e3f  Error #eb212e  Info #6cace4
+   Type: Gilroy (proprietary) -> Manrope (closest free geometric sans).
+   Corporate/clinical: crisp corners, flat, generous whitespace. */
 :root {
-  --background: 210 20% 98%;
-  --foreground: 222 30% 12%;
+  --background: 40 22% 97%;
+  --foreground: 246 32% 16%;
   --card: 0 0% 100%;
-  --card-foreground: 222 30% 12%;
-  --muted: 210 16% 94%;
-  --muted-foreground: 215 16% 42%;
-  --primary: 5 78% 51%;            /* Swiss red */
+  --card-foreground: 246 32% 16%;
+  --muted: 40 16% 92%;
+  --muted-foreground: 246 10% 42%;
+  --primary: 246 52% 33%;          /* Galenica indigo */
   --primary-foreground: 0 0% 100%;
-  --border: 214 20% 88%;
-  --input: 214 20% 88%;
-  --ring: 5 78% 51%;
-  --radius: 0.75rem;
+  --accent: 16 86% 49%;            /* Galenica orange */
+  --accent-foreground: 0 0% 100%;
+  --border: 40 13% 86%;
+  --input: 40 13% 86%;
+  --ring: 246 52% 33%;
+  --radius: 0.4rem;                /* crisper corners, corporate feel */
 
-  --critical: 0 72% 51%;
-  --warning: 35 92% 50%;
-  --healthy: 152 56% 40%;
-  --overstock: 245 58% 58%;
-  --forecast: 217 91% 56%;
-  --actual: 222 30% 30%;
+  --critical: 356 84% 51%;         /* #eb212e */
+  --warning: 32 90% 48%;
+  --healthy: 121 44% 43%;          /* #3d9e3f */
+  --overstock: 209 65% 66%;        /* #6cace4 info blue */
+  --forecast: 16 86% 49%;          /* orange forecast line/area */
+  --actual: 246 32% 26%;           /* dark indigo actual line */
 }
 
 :root.dark {
-  --background: 222 34% 9%;
-  --foreground: 210 20% 92%;
-  --card: 222 30% 13%;
-  --card-foreground: 210 20% 92%;
-  --muted: 217 24% 18%;
-  --muted-foreground: 215 18% 62%;
-  --primary: 5 82% 58%;
-  --primary-foreground: 0 0% 100%;
-  --border: 217 24% 22%;
-  --input: 217 24% 22%;
-  --ring: 5 82% 58%;
+  --background: 246 32% 9%;
+  --foreground: 40 22% 92%;
+  --card: 246 26% 13%;
+  --card-foreground: 40 22% 92%;
+  --muted: 246 18% 19%;
+  --muted-foreground: 246 12% 64%;
+  --primary: 246 62% 66%;          /* lighter indigo for dark bg */
+  --primary-foreground: 246 40% 10%;
+  --accent: 16 90% 58%;
+  --accent-foreground: 0 0% 100%;
+  --border: 246 18% 23%;
+  --input: 246 18% 23%;
+  --ring: 246 62% 66%;
 
-  --critical: 0 78% 62%;
-  --warning: 38 95% 58%;
-  --healthy: 152 52% 50%;
-  --overstock: 245 70% 70%;
-  --forecast: 213 94% 68%;
-  --actual: 210 20% 80%;
+  --critical: 356 80% 64%;
+  --warning: 36 95% 58%;
+  --healthy: 121 42% 53%;
+  --overstock: 209 70% 68%;
+  --forecast: 16 92% 60%;
+  --actual: 40 22% 82%;
 }
 
 * {
@@ -55,8 +63,13 @@ body {
   margin: 0;
   background: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: Manrope, "Gilroy", system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Galenica signature diagonal gradient — used for the brand mark / hero accents */
+.brand-gradient {
+  background-image: linear-gradient(264deg, hsl(var(--accent)) 0%, hsl(var(--primary)) 99%);
 }
 
 /* thin scrollbars */

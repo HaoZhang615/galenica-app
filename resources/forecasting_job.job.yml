@@ -68,4 +68,6 @@ resources:
               - mlflow>=2.19.0
               - faker>=30.0.0
               - psycopg[binary]>=3.2.0
-              - databricks-sdk>=0.40.0
+              # Lakebase (w.database) API requires a recent SDK; the serverless
+              # base image ships an older one, so pin a floor that has it.
+              - databricks-sdk>=0.126.0

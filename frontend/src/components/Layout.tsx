@@ -29,7 +29,7 @@ export default function Layout() {
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col border-r bg-card px-3 py-5 md:flex">
         <div className="flex items-center gap-2 px-2 pb-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="brand-gradient flex h-9 w-9 items-center justify-center rounded-lg text-white">
             <Pill className="h-5 w-5" />
           </div>
           <div className="leading-tight">
