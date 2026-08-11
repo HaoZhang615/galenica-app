@@ -128,7 +128,7 @@ def deploy_endpoint(endpoint_name: str, model_name: str, version: str):
         print(f"[galenica] Creating serving endpoint '{endpoint_name}'...")
         w.serving_endpoints.create_and_wait(
             name=endpoint_name,
-            config=EndpointCoreConfigInput(served_entities=[served]),
+            config=EndpointCoreConfigInput(name=endpoint_name, served_entities=[served]),
         )
 
 
