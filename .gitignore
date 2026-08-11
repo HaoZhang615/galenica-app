@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# Node / frontend
+node_modules/
+npm-debug.log*
+frontend/node_modules/
+# NOTE: frontend/dist is committed/deployed — do NOT ignore it.
+
+# Databricks
+.databricks/
+*.databricks.log
+
+# Harness / editor artifacts
+.claude/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store

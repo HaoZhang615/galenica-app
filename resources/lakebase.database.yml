@@ -1,0 +1,11 @@
+# Lakebase (Postgres) instance for the app's operational/transactional state:
+# reorder decisions, stockout-alert acknowledgements, annotations, user prefs,
+# plus a low-latency "latest forecast" table synced from Delta.
+#
+# NOTE: Lakebase requires a serverless-enabled workspace. CU_1 is the smallest
+# capacity and is plenty for a demo.
+resources:
+  database_instances:
+    galenica_db:
+      name: ${var.lakebase_instance}
+      capacity: "CU_1"

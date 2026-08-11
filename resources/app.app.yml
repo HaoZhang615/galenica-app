@@ -1,0 +1,41 @@
+# The Databricks App: FastAPI backend + built React frontend.
+# `source_code_path` is the bundle root (this repo) minus the sync excludes in
+# databricks.yml, so only app.yaml, app.py, server/, pyproject.toml and the
+# built frontend/dist are uploaded.
+#
+# Resource bindings inject connection details as env vars at runtime:
+#   - sql-warehouse  -> DATABRICKS_WAREHOUSE_ID
+#   - database       -> PGHOST/PGPORT/PGDATABASE/PGUSER
+#   - serving-endpoint (forecast model) and llm (assistant) -> CAN_QUERY
+resources:
+  apps:
+    galenica_app:
+      name: ${var.app_name}
+      description: "Galenica demand-forecasting demo — 400+ Swiss pharmacies, live model serving + Lakebase."
+      source_code_path: ../
+
+      resources:
+        - name: sql-warehouse
+          description: "SQL Warehouse for historical/aggregate analytics."
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
+
+        - name: database
+          description: "Lakebase Postgres for operational app state."
+          database:
+            instance_name: ${var.lakebase_instance}
+            database_name: databricks_postgres
+            permission: CAN_CONNECT_AND_CREATE
+
+        - name: forecast-endpoint
+          description: "Model Serving endpoint for on-demand forecasts (swap to prod model here)."
+          serving_endpoint:
+            name: ${var.serving_endpoint_name}
+            permission: CAN_QUERY
+
+        - name: llm
+          description: "Foundation Model endpoint for the AI assistant."
+          serving_endpoint:
+            name: ${var.llm_endpoint}
+            permission: CAN_QUERY

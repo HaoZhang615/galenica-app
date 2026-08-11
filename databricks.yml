@@ -1,0 +1,87 @@
+# Galenica Demand Forecasting Demo — Databricks Asset Bundle (DABs)
+#
+# This bundle is the single entry point for deploying the whole demo to a
+# Databricks workspace (built and tested on Azure Databricks). Clone the repo,
+# set the variables below (or override per-target / on the CLI), then:
+#
+#   databricks bundle validate --strict -t dev
+#   databricks bundle deploy            -t dev
+#   databricks bundle run forecasting_job -t dev   # generate data + serve model
+#
+# Everything is parameterised so Galenica can point the app at their *real*
+# forecasting endpoint by changing a single variable (`serving_endpoint_name`).
+
+bundle:
+  name: galenica-forecasting-demo
+
+include:
+  - resources/*.yml
+
+# Keep dev-only and build artifacts out of the workspace sync. The React app is
+# deployed as its built output (frontend/dist), never its source or node_modules.
+sync:
+  exclude:
+    - "**/node_modules"
+    - "**/.venv"
+    - "**/__pycache__"
+    - ".git"
+    - "frontend/src"
+    - "frontend/public"
+    - "frontend/node_modules"
+    - "**/.DS_Store"
+    - ".github"
+
+# ---------------------------------------------------------------------------
+# Variables — override these for your environment (see README).
+# CLI override example: --var="catalog=galenica_prod,warehouse_id=abc123"
+# ---------------------------------------------------------------------------
+variables:
+  catalog:
+    description: Unity Catalog to hold synthetic history + forecast tables.
+    default: galenica_demo
+  schema:
+    description: Schema inside the catalog for demo tables.
+    default: forecasting
+  warehouse_id:
+    description: SQL Warehouse ID the app queries for analytics. Find with `databricks warehouses list`.
+    default: ""
+  serving_endpoint_name:
+    description: >-
+      Model Serving endpoint the app calls for on-demand forecasts. The bundle
+      creates a synthetic one with this name; set it to your REAL endpoint name
+      to swap in Galenica's production model — no code change required.
+    default: galenica-demand-forecast
+  lakebase_instance:
+    description: Lakebase (Postgres) database instance name for app operational state.
+    default: galenica-app-db
+  llm_endpoint:
+    description: Foundation Model serving endpoint for the AI assistant (via AI Gateway).
+    default: databricks-claude-sonnet-4-5
+  app_name:
+    description: Databricks App name.
+    default: galenica-forecast-demo
+  notification_email:
+    description: Email for job failure notifications.
+    default: ""
+
+# ---------------------------------------------------------------------------
+# Targets — dev (default) and prod. Set `host` to your workspace URL.
+# ---------------------------------------------------------------------------
+targets:
+  dev:
+    mode: development
+    default: true
+    # workspace.host is read from your CLI profile (`-p <profile>`) unless set here.
+    # workspace:
+    #   host: https://adb-XXXXXXXXXXXX.XX.azuredatabricks.net
+
+  prod:
+    mode: production
+    variables:
+      catalog: galenica_prod
+    # workspace:
+    #   host: https://adb-XXXXXXXXXXXX.XX.azuredatabricks.net
+    permissions:
+      - level: CAN_MANAGE
+        # group_name: galenica-admins
+        service_principal_name: ""

@@ -1,0 +1,71 @@
+# Setup/refresh job: generates synthetic data into Delta, registers + serves the
+# synthetic forecasting model, and seeds the Lakebase operational store.
+# Runs on serverless compute. Trigger once after deploy, then on a schedule to
+# keep the demo data "fresh".
+resources:
+  jobs:
+    forecasting_job:
+      name: "[${bundle.target}] Galenica forecasting demo — setup & refresh"
+
+      # Weekly refresh so the demo always shows recent dates. Remove/adjust freely.
+      schedule:
+        quartz_cron_expression: "0 0 3 ? * MON"
+        timezone_id: "Europe/Zurich"
+        pause_status: PAUSED
+
+      email_notifications:
+        on_failure:
+          - ${var.notification_email}
+
+      # Parameters shared by all tasks; each script reads them via argparse.
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+        - name: serving_endpoint_name
+          default: ${var.serving_endpoint_name}
+        - name: lakebase_instance
+          default: ${var.lakebase_instance}
+
+      tasks:
+        - task_key: generate_synthetic_data
+          spark_python_task:
+            python_file: ../data_pipeline/generate_synthetic_data.py
+            parameters:
+              - "--catalog=${var.catalog}"
+              - "--schema=${var.schema}"
+          environment_key: default
+
+        - task_key: register_and_serve_model
+          depends_on:
+            - task_key: generate_synthetic_data
+          spark_python_task:
+            python_file: ../data_pipeline/register_and_serve.py
+            parameters:
+              - "--catalog=${var.catalog}"
+              - "--schema=${var.schema}"
+              - "--endpoint-name=${var.serving_endpoint_name}"
+          environment_key: default
+
+        - task_key: seed_lakebase
+          depends_on:
+            - task_key: generate_synthetic_data
+          spark_python_task:
+            python_file: ../data_pipeline/seed_lakebase.py
+            parameters:
+              - "--catalog=${var.catalog}"
+              - "--schema=${var.schema}"
+              - "--instance=${var.lakebase_instance}"
+          environment_key: default
+
+      # Serverless environment with the pip deps the scripts need.
+      environments:
+        - environment_key: default
+          spec:
+            client: "3"
+            dependencies:
+              - mlflow>=2.19.0
+              - faker>=30.0.0
+              - psycopg[binary]>=3.2.0
+              - databricks-sdk>=0.40.0

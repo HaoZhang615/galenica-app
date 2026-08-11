@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens — professional neutral slate base + Swiss-red primary.
+   Semantic risk colors are chosen to stay distinguishable in both themes. */
+:root {
+  --background: 210 20% 98%;
+  --foreground: 222 30% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 30% 12%;
+  --muted: 210 16% 94%;
+  --muted-foreground: 215 16% 42%;
+  --primary: 5 78% 51%;            /* Swiss red */
+  --primary-foreground: 0 0% 100%;
+  --border: 214 20% 88%;
+  --input: 214 20% 88%;
+  --ring: 5 78% 51%;
+  --radius: 0.75rem;
+
+  --critical: 0 72% 51%;
+  --warning: 35 92% 50%;
+  --healthy: 152 56% 40%;
+  --overstock: 245 58% 58%;
+  --forecast: 217 91% 56%;
+  --actual: 222 30% 30%;
+}
+
+:root.dark {
+  --background: 222 34% 9%;
+  --foreground: 210 20% 92%;
+  --card: 222 30% 13%;
+  --card-foreground: 210 20% 92%;
+  --muted: 217 24% 18%;
+  --muted-foreground: 215 18% 62%;
+  --primary: 5 82% 58%;
+  --primary-foreground: 0 0% 100%;
+  --border: 217 24% 22%;
+  --input: 217 24% 22%;
+  --ring: 5 82% 58%;
+
+  --critical: 0 78% 62%;
+  --warning: 38 95% 58%;
+  --healthy: 152 52% 50%;
+  --overstock: 245 70% 70%;
+  --forecast: 213 94% 68%;
+  --actual: 210 20% 80%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  margin: 0;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* thin scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 8px; }

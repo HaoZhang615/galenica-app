@@ -1,0 +1,37 @@
+# Databricks Apps runtime config. Starts the FastAPI server (which also serves
+# the built React frontend). PGHOST/PGPORT/PGDATABASE/PGUSER and the serving
+# endpoint bindings are auto-injected from the app resources (see app.app.yml);
+# only non-derivable config is set here.
+command:
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+env:
+  # Unity Catalog location of the analytics tables.
+  - name: CATALOG
+    value: "galenica_demo"
+  - name: SCHEMA
+    value: "forecasting"
+
+  # Forecast Model Serving endpoint (matches serving_endpoint_name in the bundle).
+  - name: SERVING_ENDPOINT
+    value: "galenica-demand-forecast"
+
+  # Foundation Model endpoint for the assistant.
+  - name: LLM_ENDPOINT
+    value: "databricks-claude-sonnet-4-5"
+
+  # Optional: AI Gateway base URL so assistant traffic drives Gateway features.
+  # Format: https://<workspace-id>.ai-gateway.cloud.databricks.com/mlflow/v1
+  # Leave unset to fall back to the standard serving path.
+  - name: AI_GATEWAY_URL
+    value: ""
+
+  # Optional: Genie space id to route "ask your data" through Genie instead of
+  # a raw Foundation Model call. Leave empty to use the LLM directly.
+  - name: GENIE_SPACE_ID
+    value: ""
