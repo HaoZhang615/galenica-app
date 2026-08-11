@@ -21,6 +21,7 @@ import mlflow
 import pandas as pd
 from pyspark.sql import SparkSession
 
+import forecasting_model
 from forecasting_model import GalenicaForecastModel
 
 
@@ -73,7 +74,10 @@ def main():
     except Exception as e:  # fall back to default experiment
         print(f"[galenica] could not set experiment ({e}); using default")
 
-    this_dir = os.path.dirname(os.path.abspath(__file__))
+    # NOTE: `__file__` is undefined here — serverless spark_python_task runs the
+    # script via exec(). Get the sibling module's path from the imported module,
+    # which does have __file__ set.
+    model_code_path = forecasting_model.__file__
     input_example = pd.DataFrame(
         [{"pharmacy_id": "PH0001", "product_id": "SKU0001", "horizon": 28}]
     )
@@ -84,7 +88,7 @@ def main():
             artifact_path="model",
             python_model=GalenicaForecastModel(),
             artifacts={"series": series_path},
-            code_paths=[os.path.join(this_dir, "forecasting_model.py")],
+            code_paths=[model_code_path],
             input_example=input_example,
             registered_model_name=model_name,
             pip_requirements=["mlflow", "pandas"],
