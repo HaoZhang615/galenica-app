@@ -37,7 +37,7 @@ sync:
 variables:
   catalog:
     description: Unity Catalog to hold synthetic history + forecast tables.
-    default: haozhang_galenica_demo_2
+    default: galenica_demo
   schema:
     description: Schema inside the catalog for demo tables.
     default: forecasting
