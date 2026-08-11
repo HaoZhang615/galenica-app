@@ -28,14 +28,12 @@ resources:
             database_name: databricks_postgres
             permission: CAN_CONNECT_AND_CREATE
 
-        - name: forecast-endpoint
-          description: "Model Serving endpoint for on-demand forecasts (swap to prod model here)."
-          serving_endpoint:
-            name: ${var.serving_endpoint_name}
-            permission: CAN_QUERY
-
-        - name: llm
-          description: "Foundation Model endpoint for the AI assistant."
-          serving_endpoint:
-            name: ${var.llm_endpoint}
-            permission: CAN_QUERY
+        # Serving endpoint bindings added back after forecasting_job creates the endpoints.
+        # - name: forecast-endpoint
+        #   serving_endpoint:
+        #     name: ${var.serving_endpoint_name}
+        #     permission: CAN_QUERY
+        # - name: llm
+        #   serving_endpoint:
+        #     name: ${var.llm_endpoint}
+        #     permission: CAN_QUERY

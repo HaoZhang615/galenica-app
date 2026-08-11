@@ -13,7 +13,7 @@ command:
 env:
   # Unity Catalog location of the analytics tables.
   - name: CATALOG
-    value: "galenica_demo"
+    value: "haozhang_galenica_demo_2"
   - name: SCHEMA
     value: "forecasting"
 

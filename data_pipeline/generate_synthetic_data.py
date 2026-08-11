@@ -258,7 +258,17 @@ def main():
     args = ap.parse_args()
 
     spark = get_spark()
-    spark.sql(f"CREATE CATALOG IF NOT EXISTS {args.catalog}")
+    # CREATE CATALOG fails on workspaces where the metastore has no storage root
+    # configured (common on FEVM classic workspaces). Create the catalog via the
+    # Databricks UI first (Data > Create catalog), then re-run this job.
+    try:
+        spark.sql(f"CREATE CATALOG IF NOT EXISTS {args.catalog}")
+    except Exception as e:
+        if "INVALID_STATE" in str(e) or "storage root" in str(e).lower():
+            print(f"[galenica] WARNING: Could not auto-create catalog '{args.catalog}' "
+                  f"(metastore has no storage root). Assuming it already exists.")
+        else:
+            raise
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {args.catalog}.{args.schema}")
 
     print(f"[galenica] Building dim_pharmacy ({N_PHARMACIES} pharmacies)...")

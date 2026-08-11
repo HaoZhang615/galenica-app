@@ -28,7 +28,6 @@ sync:
     - "frontend/src"
     - "frontend/public"
     - "frontend/node_modules"
-    - "**/.DS_Store"
     - ".github"
 
 # ---------------------------------------------------------------------------
@@ -38,7 +37,7 @@ sync:
 variables:
   catalog:
     description: Unity Catalog to hold synthetic history + forecast tables.
-    default: galenica_demo
+    default: haozhang_galenica_demo_2
   schema:
     description: Schema inside the catalog for demo tables.
     default: forecasting
