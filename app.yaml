@@ -11,13 +11,15 @@ command:
   - "8000"
 
 env:
-  # Build tuning: this workspace's PyPI proxy is slow; give uv a long HTTP
-  # timeout and low concurrency so slow wheel downloads complete instead of
-  # timing out and aborting the whole install.
-  - name: UV_HTTP_TIMEOUT
-    value: "600"
-  - name: UV_CONCURRENT_DOWNLOADS
-    value: "2"
+  # SQL Warehouse id — injected from the sql-warehouse app resource. Without this
+  # valueFrom the id isn't set and the backend falls back to MOCK mode.
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql-warehouse
+
+  # Lakebase instance name so db.py can mint a Postgres OAuth credential.
+  # (PGHOST/PGPORT/PGDATABASE/PGUSER are auto-injected by the database resource.)
+  - name: LAKEBASE_INSTANCE
+    value: "galenica-app-db"
 
   # Unity Catalog location of the analytics tables.
   - name: CATALOG

@@ -13,7 +13,11 @@ import os
 import re
 import time
 
-from databricks.sdk.service.sql import StatementParameterListItem, StatementState
+from databricks.sdk.service.sql import (
+    ExecuteStatementRequestOnWaitTimeout,
+    StatementParameterListItem,
+    StatementState,
+)
 
 from .config import get_workspace_client
 
@@ -52,7 +56,7 @@ def query(sql: str, params: dict | None = None) -> list[dict]:
         statement=statement,
         parameters=sdk_params,
         wait_timeout="30s",
-        on_wait_timeout="CONTINUE",
+        on_wait_timeout=ExecuteStatementRequestOnWaitTimeout.CONTINUE,
     )
     # Poll until the statement leaves a non-terminal state.
     while resp.status and resp.status.state in (StatementState.PENDING, StatementState.RUNNING):

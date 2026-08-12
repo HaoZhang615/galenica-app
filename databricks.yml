@@ -19,6 +19,9 @@ include:
 
 # Keep dev-only and build artifacts out of the workspace sync. The React app is
 # deployed as its built output (frontend/dist), never its source or node_modules.
+# The app builds from pyproject.toml + uv.lock (the standard Databricks Apps path).
+# If your workspace's Apps PyPI proxy is degraded and the build can't fetch wheels,
+# see "Fallback: offline vendored install" in the README for the vendoring workaround.
 sync:
   exclude:
     - "**/node_modules"

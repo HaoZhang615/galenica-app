@@ -52,7 +52,14 @@ are the analytics source of truth; Lakebase holds operational/transactional stat
 
 ---
 
-## Deploy in 5 steps
+## Deploy
+
+The app resource **binds** to the Lakebase instance and the two serving endpoints
+(`CAN_CONNECT_AND_CREATE` / `CAN_QUERY`). Those bindings only succeed once their
+targets exist and are ready — the Lakebase instance has finished provisioning and
+the `forecasting_job` has registered the model + created the serving endpoint.
+So the first deploy is **phased**: create the infrastructure and run the job, then
+deploy the app last. Later deploys are a single `bundle deploy`.
 
 ```bash
 # 1. Clone
@@ -64,16 +71,34 @@ git clone <this-repo> galenica-app && cd galenica-app
 # 3. Build the frontend (its output is deployed with the app)
 cd frontend && npm install && npm run build && cd ..
 
-# 4. Validate + deploy the bundle (creates the job, Lakebase instance, and app)
+# 4. PHASE 1 — deploy infrastructure WITHOUT the app, so nothing tries to bind yet.
+#    Comment out the `- resources/app.app.yml` line under `include:` in databricks.yml
+#    (or move the file aside), then:
 databricks bundle validate --strict -t dev -p <profile>
-databricks bundle deploy            -t dev -p <profile>
+databricks bundle deploy            -t dev -p <profile>   # creates the Lakebase instance + the job
 
-# 5. Generate data + register/serve the model + seed Lakebase, then it's live
+# 5. PHASE 2 — generate data, register/serve the model, create the endpoint, seed Lakebase.
 databricks bundle run forecasting_job -t dev -p <profile>
+
+# 6. PHASE 3 — restore the `- resources/app.app.yml` include, then deploy again.
+#    Now the instance + both endpoints exist, so all app bindings succeed.
+databricks bundle deploy -t dev -p <profile>
+
+# 7. Grant the app's service principal read access to the analytics catalog.
+#    The app runs as its own SP (created in phase 3) and needs Unity Catalog
+#    privileges to query the warehouse tables. (Lakebase grants are applied
+#    automatically by the seed step.)
+SP=$(databricks apps get galenica-forecast-demo -p <profile> --output json | \
+     python3 -c "import sys,json;print(json.load(sys.stdin)['service_principal_client_id'])")
+databricks grants update CATALOG <catalog> \
+  --json "{\"changes\":[{\"principal\":\"$SP\",\"add\":[\"USE_CATALOG\"]}]}" -p <profile>
+databricks grants update SCHEMA <catalog>.<schema> \
+  --json "{\"changes\":[{\"principal\":\"$SP\",\"add\":[\"USE_SCHEMA\",\"SELECT\"]}]}" -p <profile>
 ```
 
 Open the app URL from `databricks apps list -p <profile>` (or the deploy output).
-Application logs: append `/logz` to the app URL.
+Application logs: append `/logz` to the app URL. After the first-time phased deploy,
+routine updates are just `databricks bundle deploy -t dev -p <profile>`.
 
 ### Configuration variables (`databricks.yml`)
 
@@ -89,6 +114,37 @@ Application logs: append `/logz` to the app URL.
 The app also reads matching env vars from `app.yaml` (`CATALOG`, `SCHEMA`,
 `SERVING_ENDPOINT`, `LLM_ENDPOINT`, `AI_GATEWAY_URL`, `GENIE_SPACE_ID`). Keep
 these in sync with the bundle variables.
+
+### Fallback: offline vendored install (degraded Apps PyPI proxy)
+
+The app builds the standard way — from `pyproject.toml` + `uv.lock`, with the
+Databricks Apps builder fetching wheels through the workspace's PyPI proxy. On
+some workspaces that proxy is degraded and wheel downloads time out during the
+app build (`databricks apps deploy` fails at the install step). If you hit that,
+switch to an **offline install** from vendored wheels — no network needed at
+build time:
+
+```bash
+# 1. Vendor the Linux/cp311 wheels the app runtime needs, into ./vendor
+uv export --frozen --no-dev --no-emit-project -o /tmp/reqs.in
+uv pip download -r /tmp/reqs.in \
+  --python-platform x86_64-manylinux2014 --python-version 3.11 --only-binary=:all: \
+  -d vendor
+
+# 2. Write requirements.txt that installs from ./vendor with no index
+{ echo "--no-index"; echo "--find-links ./vendor"; \
+  uv export --frozen --no-dev --no-emit-project --no-hashes; } > requirements.txt
+
+# 3. Make the bundle ship vendor/ + requirements.txt and skip the uv build:
+#    in databricks.yml under `sync:`, add
+#      include: ["vendor/**"]           # vendor/ is gitignored by default
+#      exclude: [..., "pyproject.toml", "uv.lock"]
+#    The builder then runs `pip install -r requirements.txt` (offline).
+```
+
+The Databricks Apps builder prefers `requirements.txt` when present; excluding
+`pyproject.toml`/`uv.lock` forces the offline pip path. Revert these `databricks.yml`
+edits to return to the normal uv build once the proxy is healthy.
 
 ---
 

@@ -81,6 +81,17 @@ CREATE TABLE IF NOT EXISTS app.latest_forecast (
 CREATE INDEX IF NOT EXISTS idx_alerts_status ON app.stockout_alerts (status, severity);
 CREATE INDEX IF NOT EXISTS idx_reorder_status ON app.reorder_decisions (status);
 CREATE INDEX IF NOT EXISTS idx_latest_fc_ph ON app.latest_forecast (pharmacy_id);
+
+-- Grant the schema to PUBLIC so the Databricks App's service-principal Postgres
+-- role (created only when the app is bound, i.e. AFTER this seed runs) can read
+-- and write. This seed runs as the deploying user; without these grants the app
+-- SP hits "permission denied for schema app". PUBLIC keeps the demo deploy simple;
+-- for production, replace PUBLIC with the app SP's role and drop the rest.
+GRANT USAGE ON SCHEMA app TO PUBLIC;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA app TO PUBLIC;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA app TO PUBLIC;
+ALTER DEFAULT PRIVILEGES IN SCHEMA app GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO PUBLIC;
+ALTER DEFAULT PRIVILEGES IN SCHEMA app GRANT USAGE, SELECT ON SEQUENCES TO PUBLIC;
 """
 
 

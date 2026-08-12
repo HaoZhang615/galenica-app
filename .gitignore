@@ -25,3 +25,6 @@ frontend/node_modules/
 .vscode/
 *.swp
 .DS_Store
+
+# Vendored wheels (temporary Apps proxy workaround; not part of the clean template)
+vendor/

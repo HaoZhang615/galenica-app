@@ -107,11 +107,18 @@ def get_overview() -> dict:
         GROUP BY forecast_date
         ORDER BY date
     """)
-    # alert counts come from Lakebase
+    # alert counts + at-risk aggregates come from Lakebase
     counts = _lakebase_query(
         "SELECT severity, COUNT(*) AS n FROM app.stockout_alerts WHERE status='open' GROUP BY severity"
     )
     cmap = {r["severity"]: r["n"] for r in counts}
+    agg = _lakebase_query("""
+        SELECT COUNT(DISTINCT pharmacy_id) FILTER (WHERE severity IN ('critical','warning'))
+                   AS pharmacies_at_risk,
+               ROUND(AVG(days_cover)::numeric, 1) AS avg_days_cover
+        FROM app.stockout_alerts WHERE status='open'
+    """)
+    a = agg[0] if agg else {}
     k = kpi_rows[0] if kpi_rows else {}
     return {
         "kpis": {
@@ -119,10 +126,10 @@ def get_overview() -> dict:
             "critical_alerts": cmap.get("critical", 0),
             "warning_alerts": cmap.get("warning", 0),
             "overstock_alerts": cmap.get("overstock", 0),
-            "pharmacies_at_risk": 0,
+            "pharmacies_at_risk": int(a.get("pharmacies_at_risk") or 0),
             "total_pharmacies": k.get("total_pharmacies", 0),
             "total_products": k.get("total_products", 0),
-            "avg_days_cover": None,
+            "avg_days_cover": float(a["avg_days_cover"]) if a.get("avg_days_cover") is not None else None,
             "forecast_accuracy_pct": 91.4,
         },
         "national_trend": trend,
