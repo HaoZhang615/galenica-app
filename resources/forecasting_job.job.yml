@@ -59,6 +59,13 @@ resources:
               - "--instance=${var.lakebase_instance}"
           environment_key: default
 
+        - task_key: configure_ai_gateway
+          spark_python_task:
+            python_file: ../data_pipeline/configure_ai_gateway.py
+            parameters:
+              - "--llm-endpoint=${var.llm_endpoint}"
+          environment_key: default
+
       # Serverless environment with the pip deps the scripts need.
       environments:
         - environment_key: default

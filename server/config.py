@@ -21,8 +21,15 @@ CATALOG = os.environ.get("CATALOG", "galenica_demo")
 SCHEMA = os.environ.get("SCHEMA", "forecasting")
 SERVING_ENDPOINT = os.environ.get("SERVING_ENDPOINT", "galenica-demand-forecast")
 LLM_ENDPOINT = os.environ.get("LLM_ENDPOINT", "databricks-claude-sonnet-4-5")
-AI_GATEWAY_URL = os.environ.get("AI_GATEWAY_URL", "").strip()
 GENIE_SPACE_ID = os.environ.get("GENIE_SPACE_ID", "").strip()
+
+# AI Gateway URL for the LLM endpoint. When set, llm.py routes through the
+# AI Gateway subdomain so usage appears in system.ai_gateway.usage and the
+# "Total tokens (7d)" counter on the endpoint list page updates.
+# Format: https://{workspace_id}.ai-gateway.cloud.databricks.com/mlflow/v1
+# The configure_ai_gateway job task enables usage tracking on the endpoint;
+# set this env var once the AI Gateway subdomain is provisioned for your workspace.
+AI_GATEWAY_URL = os.environ.get("AI_GATEWAY_URL", "").strip()
 
 WAREHOUSE_ID = os.environ.get("DATABRICKS_WAREHOUSE_ID", "").strip()
 PGHOST = os.environ.get("PGHOST", "").strip()

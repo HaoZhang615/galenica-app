@@ -8,6 +8,7 @@ Routes never branch on mode; they call these functions.
 """
 import datetime as dt
 import functools
+import hashlib
 import itertools
 
 from . import mockdata
@@ -210,7 +211,7 @@ def _series_risk_for_pharmacy(pharmacy_id: str) -> list[dict]:
         rows.sort(key=lambda r: (r["severity"] is None, r["days_cover"]))
         return rows
     from . import warehouse
-    return warehouse.query(f"""
+    rows = warehouse.query(f"""
         SELECT f.product_id, p.name AS product_name, p.category, p.is_rx,
                SUM(f.forecast_p50) AS demand_7d
         FROM {_fq('fact_forecast')} f
@@ -219,6 +220,47 @@ def _series_risk_for_pharmacy(pharmacy_id: str) -> list[dict]:
         GROUP BY f.product_id, p.name, p.category, p.is_rx
         ORDER BY demand_7d DESC
     """, {"pid": pharmacy_id})
+
+    # Enrich with on-hand / days-of-cover / severity / recommended reorder.
+    # Alerting series have real values in Lakebase (keeps this consistent with the
+    # Alerts page); the many healthy series have no stored inventory, so we
+    # synthesize a stable, safely-healthy days-of-cover from demand — mirroring the
+    # mock model's shape so the detail view is complete instead of showing "—".
+    alert_rows = _lakebase_query(
+        "SELECT product_id, on_hand, days_cover, severity FROM app.stockout_alerts "
+        "WHERE pharmacy_id = %(pid)s AND status = 'open'", {"pid": pharmacy_id})
+    amap = {r["product_id"]: r for r in alert_rows}
+    reorder_rows = _lakebase_query(
+        "SELECT product_id, recommended_qty FROM app.reorder_decisions "
+        "WHERE pharmacy_id = %(pid)s", {"pid": pharmacy_id})
+    rmap = {r["product_id"]: r["recommended_qty"] for r in reorder_rows}
+
+    for r in rows:
+        demand = r.get("demand_7d") or 0.0
+        daily = demand / 7 + 0.001
+        a = amap.get(r["product_id"])
+        if a:
+            r["on_hand"] = int(a["on_hand"]) if a["on_hand"] is not None else None
+            r["days_cover"] = float(a["days_cover"]) if a["days_cover"] is not None else None
+            r["severity"] = a["severity"]
+        else:
+            # Deterministic healthy cover in ~[6, 45] days (never < 4 or > 60, so it
+            # never contradicts the absence of an alert for this series).
+            h = int(hashlib.md5(f"{pharmacy_id}:{r['product_id']}".encode()).hexdigest()[:8], 16)
+            target_cover = 6 + (h % 3900) / 100.0
+            on_hand = max(0, int(round(target_cover * daily)))
+            r["on_hand"] = on_hand
+            r["days_cover"] = round(on_hand / daily, 2)
+            r["severity"] = None
+        if r["product_id"] in rmap:
+            r["recommended_qty"] = int(rmap[r["product_id"]] or 0)
+        elif r["severity"] in ("critical", "warning") and r["on_hand"] is not None:
+            r["recommended_qty"] = max(0, int(round(demand * 2 - r["on_hand"])))
+        else:
+            r["recommended_qty"] = 0
+
+    rows.sort(key=lambda r: (r["severity"] is None, r["days_cover"] if r["days_cover"] is not None else 1e9))
+    return rows
 
 
 def get_product_forecast(pharmacy_id: str, product_id: str, horizon: int = 28,

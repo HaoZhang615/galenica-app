@@ -57,7 +57,13 @@ variables:
     description: Lakebase (Postgres) database instance name for app operational state.
     default: galenica-app-db
   llm_endpoint:
-    description: Foundation Model serving endpoint for the AI assistant (via AI Gateway).
+    description: >-
+      Foundation Model serving endpoint for the AI assistant. The setup job
+      enables AI Gateway usage tracking on this endpoint. To route app traffic
+      through the AI Gateway subdomain (required for system.ai_gateway.usage
+      counters), set AI_GATEWAY_URL in app.yaml to
+      https://{workspace_id}.ai-gateway.cloud.databricks.com/mlflow/v1 once
+      the subdomain is provisioned for your workspace.
     default: databricks-claude-sonnet-4-5
   app_name:
     description: Databricks App name.
